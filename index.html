@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orion AI Multi-Agente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bondi:#1e6f8d;
+  --marino:#2b4c6f;
+  --eden:#112a3d;
+  --sinbad:#a3c5d9;
+  --janna:#e8f1f5;
+  --bg:#09151f;
+  --err:#ff8b8b;
+  --panel:#0d202e;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;display:flex;flex-direction:column;color:var(--janna);font:16px/1.65 "DM Sans",system-ui,sans-serif;background:radial-gradient(900px 500px at 12% -10%,#1e6f8d2b,transparent),radial-gradient(800px 500px at 100% 110%,#2b4c6f33,transparent),var(--bg)}
+header{display:flex;align-items:center;gap:12px;padding:12px 20px}
+.marca{display:flex;align-items:center;gap:8px;margin-right:auto;font-weight:500;color:var(--sinbad)}
+#est{font-size:12px;color:var(--sinbad);opacity:.8}#est.err{color:var(--err);opacity:1;font-size:13px}
+.ic{width:34px;height:34px;border:1px solid var(--marino);border-radius:50%;background:none;color:var(--sinbad);cursor:pointer}
+#log{display:flex;flex:1;overflow:auto;width:100%;max-width:700px;margin:0 auto;padding:12px 20px 8px;flex-direction:column;gap:20px}
+.m{overflow-wrap:anywhere}
+.u{align-self:flex-end;max-width:85%;color:var(--sinbad);border-right:2px solid var(--marino);padding-right:12px}
+.a{font:400 18px/1.65 "Newsreader",Georgia,serif}
+.a.e{color:var(--err);font:500 15px/1.5 "DM Sans",sans-serif;border-left:2px solid var(--err);padding-left:12px}
+.firma{display:block;font:600 11px "DM Sans",sans-serif;color:var(--bondi);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px}
+form{width:100%;max-width:700px;margin:0 auto;padding:10px 20px 20px;display:flex;gap:10px;align-items:flex-end}
+textarea{flex:1;resize:none;max-height:160px;background:none;border:0;border-bottom:1px solid var(--marino);color:var(--janna);font:inherit;padding:8px 2px;outline:0}
+textarea::placeholder{color:#a3c5d988}textarea:focus{border-color:var(--bondi)}
+.go{flex:none;width:38px;height:38px;border:0;border-radius:50%;background:var(--bondi);display:grid;place-items:center;cursor:pointer}
+.go:disabled{opacity:.5;cursor:wait}
+:focus-visible{outline:2px solid var(--sinbad);outline-offset:2px}
+.p{display:inline-flex;gap:7px;margin-right:12px;transform:rotate(-22deg);vertical-align:middle}
+.p i{width:7px;height:7px;border-radius:50%;background:var(--sinbad);animation:pt 1.1s infinite}
+.p i:nth-child(2){animation-delay:.18s}.p i:nth-child(3){animation-delay:.36s}
+.pn{font:italic 400 16px "Newsreader",Georgia,serif;color:var(--sinbad)}
+@keyframes pt{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.btn{background:var(--bondi);color:#fff;border:0;border-radius:99px;padding:9px 20px;font:500 14px "DM Sans",sans-serif;cursor:pointer}
+.btn.s{background:none;color:var(--sinbad);border:1px solid var(--marino)}
+dialog{background:var(--panel);color:var(--janna);border:1px solid var(--marino);border-radius:14px;padding:22px;max-width:520px;width:92%;max-height:85vh;overflow-y:auto}
+dialog::backdrop{background:#000a}
+dialog h3{margin:0 0 10px;font-size:16px;color:var(--sinbad)}
+.campo-key{margin-bottom:12px}
+.campo-key label{display:block;font-size:12px;color:var(--sinbad);margin-bottom:4px}
+dialog input{width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--marino);background:var(--bg);color:var(--janna);font:inherit;font-size:13px}
+.fila{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <span class="marca">
+    <svg width="26" height="26" viewBox="0 0 32 32" fill="#a3c5d9" aria-hidden="true"><circle cx="8" cy="5" r="2.2"/><circle cx="25" cy="7" r="2.6"/><circle cx="12" cy="15" r="1.7"/><circle cx="16" cy="17" r="1.7"/><circle cx="20" cy="19" r="1.7"/><circle cx="9" cy="28" r="2"/><circle cx="24" cy="27" r="2.4"/></svg>
+    Orion Multi-Agente
+  </span>
+  <span id="est"></span>
+  <button class="ic" id="cfgb" aria-label="Ajustes">⚙</button>
+</header>
+
+<div id="log" aria-live="polite">
+  <div class="m a">Hola. ¿Qué tenemos en mente hoy?</div>
+</div>
+
+<form id="f">
+  <textarea id="q" rows="1" aria-label="Mensaje" placeholder="Escribe…"></textarea>
+  <button class="go" aria-label="Enviar">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+</form>
+
+<dialog id="cfg">
+  <h3>Claves de API</h3>
+  <p style="font-size:12px;color:var(--sinbad);margin-bottom:14px">Se guardan únicamente en el caché local de tu navegador.</p>
+  
+  <div class="campo-key"><label>Groq (Rápido)</label><input id="k_groq" type="password" placeholder="gsk_..." autocomplete="off"></div>
+  <div class="campo-key"><label>Google Gemini</label><input id="k_google" type="password" placeholder="AIzaSy..." autocomplete="off"></div>
+  <div class="campo-key"><label>Cerebras AI</label><input id="k_cerebras" type="password" placeholder="csk-..." autocomplete="off"></div>
+  <div class="campo-key"><label>SambaNova</label><input id="k_sambanova" type="password" placeholder="Key de SambaNova" autocomplete="off"></div>
+  <div class="campo-key"><label>Mistral AI</label><input id="k_mistral" type="password" placeholder="Key de Mistral" autocomplete="off"></div>
+  <div class="campo-key"><label>OpenRouter (DeepSeek)</label><input id="k_openrouter" type="password" placeholder="sk-or-..." autocomplete="off"></div>
+
+  <div class="fila">
+    <button class="btn s" id="salir" type="button">Cerrar</button>
+    <button class="btn" id="ok" type="button">Guardar Claves</button>
+  </div>
+</dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const ls = {
+  get: k => { try { return localStorage.getItem(k) || ""; } catch { return ""; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch(e) { console.error(e); } }
+};
+
+let KEYS = {
+  groq: ls.get("k_groq"),
+  google: ls.get("k_google"),
+  cerebras: ls.get("k_cerebras"),
+  sambanova: ls.get("k_sambanova"),
+  mistral: ls.get("k_mistral"),
+  openrouter: ls.get("k_openrouter")
+};
+
+let busy = false;
+const esc = s => String(s ?? "").replace(/[&<>]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c]));
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>");
+
+function actualizarEstado() {
+  let activas = Object.values(KEYS).filter(v => v.length > 5).length;
+  const e = $("#est");
+  e.className = activas === 0 ? "err" : "";
+  e.textContent = activas === 0 ? "⚠️ Sin llaves" : `● ${activas} modelos activos`;
+}
+
+// ── Personalidad ──
+const sistema = prompt => `Eres Orion, una mente estratégica, perspicaz y directa. Hablas de forma inteligente y fluida. 
+REGLAS: Cero listas aburridas. Ve directo al punto. Sé analítico.`;
+
+// ── Motor Universal OpenAI Compatible ──
+async function llamarOpenAI(url, modelo, key, prompt, nombre) {
+  if (!key) return null;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: modelo,
+      messages: [{role: "system", content: sistema(prompt)}, {role: "user", content: prompt}]
+    })
+  });
+  if (!r.ok) throw new Error(`${nombre} HTTP ${r.status} (${await r.text()})`);
+  const d = await r.json();
+  if (!d.choices?.[0]?.message) throw new Error(`Respuesta vacía de ${nombre}`);
+  return d.choices[0].message.content;
+}
+
+// ── Motor Google Gemini ──
+async function llamarGoogle(prompt) {
+  if (!KEYS.google) return null;
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${KEYS.google}`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      systemInstruction: {parts: [{text: sistema(prompt)}]},
+      contents: [{role: "user", parts: [{text: prompt}]}]
+    })
+  });
+  if (!r.ok) throw new Error(`Google HTTP ${r.status}`);
+  const d = await r.json();
+  return d.candidates?.[0]?.content?.parts?.[0]?.text || null;
+}
+
+// ── Orquestador ──
+async function ejecutarConsulta(prompt) {
+  // Configuración de los agentes a probar en orden
+  const agentes = [
+    {n: "Groq", fn: () => llamarOpenAI("https://api.groq.com/openai/v1/chat/completions", "llama-3.3-70b-versatile", KEYS.groq, prompt, "Groq")},
+    {n: "Gemini", fn: () => llamarGoogle(prompt)},
+    {n: "Cerebras", fn: () => llamarOpenAI("https://api.cerebras.ai/v1/chat/completions", "llama3.1-70b", KEYS.cerebras, prompt, "Cerebras")},
+    {n: "SambaNova", fn: () => llamarOpenAI("https://api.sambanova.ai/v1/chat/completions", "Meta-Llama-3.1-70B-Instruct", KEYS.sambanova, prompt, "SambaNova")},
+    {n: "Mistral", fn: () => llamarOpenAI("https://api.mistral.ai/v1/chat/completions", "mistral-large-latest", KEYS.mistral, prompt, "Mistral")},
+    {n: "DeepSeek", fn: () => llamarOpenAI("https://openrouter.ai/api/v1/chat/completions", "deepseek/deepseek-chat", KEYS.openrouter, prompt, "OpenRouter")}
+  ];
+
+  let errores = [];
+  let intentos = 0;
+
+  for (const ag of agentes) {
+    try {
+      const res = await ag.fn();
+      if (res) return { texto: res, modelo: ag.n }; 
+    } catch (e) {
+      intentos++;
+      errores.push(e.message);
+    }
+  }
+
+  if (intentos === 0) throw new Error("No hay ninguna API Key configurada. Abre los ajustes (⚙) y guarda al menos una.");
+  throw new Error("Fallaron los agentes probados:<br><br>" + errores.join("<br>"));
+}
+
+// ── Interfaz ──
+function add(c, h) { const d = document.createElement("div"); d.className = "m " + c; d.innerHTML = h; $("#log").append(d); $("#log").scrollTop = 1e9; return d; }
+const PENS = '<span class="p"><i></i><i></i><i></i></span><span class="pn">Analizando…</span>';
+const q = $("#q");
+q.oninput = () => { q.style.height = "auto"; q.style.height = q.scrollHeight + "px"; };
+q.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#f").requestSubmit(); } };
+
+$("#f").onsubmit = async e => {
+  e.preventDefault();
+  const t = q.value.trim(); if (!t || busy) return;
+  busy = true; $(".go").disabled = true;
+  q.value = ""; q.style.height = "auto";
+  add("u", esc(t)); const w = add("a", PENS);
+
+  try {
+    const res = await ejecutarConsulta(t);
+    w.innerHTML = `<span class="firma">Agente: ${res.modelo}</span>${fmt(res.texto)}`;
+  } catch (err) {
+    w.className = "m a e";
+    w.innerHTML = err.message;
+  } finally {
+    busy = false; $(".go").disabled = false;
+  }
+};
+
+// ── Modal ──
+$("#cfgb").onclick = () => {
+  Object.keys(KEYS).forEach(k => {
+    const el = $(`#k_${k}`);
+    if (el) el.value = KEYS[k] || "";
+  });
+  $("#cfg").showModal();
+};
+
+$("#salir").onclick = () => $("#cfg").close();
+
+$("#ok").onclick = () => {
+  Object.keys(KEYS).forEach(k => {
+    const el = $(`#k_${k}`);
+    if (el) {
+      KEYS[k] = el.value.trim();
+      ls.set(`k_${k}`, KEYS[k]);
+    }
+  });
+  actualizarEstado();
+  $("#cfg").close();
+};
+
+actualizarEstado();
+</script>
+</body>
+</html>
